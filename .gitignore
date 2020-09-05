@@ -5,3 +5,5 @@
 *.vcxproj*
 
 /Programs From Book/
+
+Debug/
