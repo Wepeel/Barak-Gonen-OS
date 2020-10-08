@@ -18,41 +18,17 @@ int main()
 
 	HANDLE hThreads[4];
 
-	hThreads[0] = CreateThread(
-		NULL,
-		0,
-		print_1000,
-		array,
-		0,
-		NULL
-	);
-
-	hThreads[1] = CreateThread(
-		NULL,
-		0,
-		print_1000,
-		array + 1,
-		0,
-		NULL
-	);
-
-	hThreads[2] = CreateThread(
-		NULL,
-		0,
-		print_1000,
-		array + 2,
-		0,
-		NULL
-	);
-
-	hThreads[3] = CreateThread(
-		NULL,
-		0,
-		print_1000,
-		array + 3,
-		0,
-		NULL
-	);
+	for (size_t i = 0; i < 4; i++)
+	{
+		hThreads[i] = CreateThread(
+			NULL,
+			0,
+			print_1000,
+			array + i,
+			0,
+			NULL
+		);
+	}
 
 	WaitForMultipleObjects(4, hThreads, TRUE, INFINITE);
 
