@@ -1,33 +1,58 @@
 #include <Windows.h>
+#include <cstdio>
 
-CRITICAL_SECTION csChopsticks[5];
+constexpr int NUM_PHILS = 12;
+
+#define EAT() printf("Philosopher %d eating.\n", left_chopstick_index + 1); Sleep(1000)
+
+CRITICAL_SECTION csChopsticks[NUM_PHILS];
 
 DWORD WINAPI ThreadProc(LPVOID lpParameter)
 {
-	BOOL success = TryEnterCriticalSection(csChopsticks);
+	const int left_chopstick_index = *static_cast<int*>(lpParameter);
+	const int right_chopstick_index = ((*static_cast<int*>(lpParameter)) + 1) % NUM_PHILS;
 
-	if (success)
-	{
-		// Place critical code here
-		LeaveCriticalSection(csChopsticks);
-	}
+	EnterCriticalSection(csChopsticks + left_chopstick_index);
+	EnterCriticalSection(csChopsticks + right_chopstick_index);
+	EAT();
+	LeaveCriticalSection(csChopsticks + left_chopstick_index);
+	LeaveCriticalSection(csChopsticks + right_chopstick_index);
+
 	return 1;
 }
 
 int main()
 {
-	for (size_t i = 0; i < 5; i++)
+	for (size_t i = 0; i < NUM_PHILS; i++)
 	{
 		InitializeCriticalSection(csChopsticks + i);
 	}
 
-	HANDLE hPhilosophers[5];
+	HANDLE hPhilosophers[NUM_PHILS];
 
-	const int arr[] = { 1,2,3,4,5 };
+	int arr[NUM_PHILS];
 
-	for()
+	for (int i = 0; i < NUM_PHILS; i++)
+	{
+		arr[i] = i;
+	}
 
-	for (size_t i = 0; i < 5; i++)
+	// Thread Creation
+	for (size_t i = 0; i < NUM_PHILS; i++)
+	{
+		hPhilosophers[i] = CreateThread(
+			nullptr,
+			NULL,
+			ThreadProc,
+			arr + i,
+			NULL,
+			nullptr
+		);
+	}
+
+	WaitForMultipleObjects(NUM_PHILS, hPhilosophers, TRUE, INFINITE);
+
+	for (size_t i = 0; i < NUM_PHILS; i++)
 	{
 		DeleteCriticalSection(csChopsticks + i);
 	}
