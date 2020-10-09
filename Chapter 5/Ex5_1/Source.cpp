@@ -1,9 +1,9 @@
 #include <Windows.h>
 #include <cstdio>
 
-constexpr int NUM_PHILS = 12;
+constexpr int NUM_PHILS = 5; // For some reason starts to freak out at 65 philosophers
 
-#define EAT() printf("Philosopher %d eating.\n", left_chopstick_index + 1); Sleep(1000)
+#define EAT() printf("Philosopher %d eating.\n", left_chopstick_index + 1);Sleep(1000)
 
 CRITICAL_SECTION csChopsticks[NUM_PHILS];
 
