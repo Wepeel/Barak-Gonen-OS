@@ -1,14 +1,16 @@
 #include <Windows.h>
 #include <cstdio>
 
-constexpr int NUM_PHILS = 64; // For some reason starts to freak out at 65 philosophers
+constexpr int NUM_PHILS = 64;
 
-//#define EAT() printf("Philosopher %d eating.\n", left_chopstick_index + 1);Sleep(1000)
+// NOTE: This will not work for more than 64 philosophers since the maximum amount of
+// object that WaitForMultipleObjects can wait for is 64
+
 #define EAT() printf("Philosopher %d eating.\n", left_chopstick_index + 1)
 
 CRITICAL_SECTION csChopsticks[NUM_PHILS];
 
-DWORD WINAPI ThreadProc(LPVOID lpParameter)
+DWORD WINAPI ThreadProc(const LPVOID lpParameter)
 {
 	const int left_chopstick_index = *static_cast<int*>(lpParameter);
 	const int right_chopstick_index = ((*static_cast<int*>(lpParameter)) + 1) % NUM_PHILS;
@@ -32,7 +34,7 @@ DWORD WINAPI ThreadProc(LPVOID lpParameter)
 		}
 	} while (!success);
 
-	return 1;
+	return 10;
 }
 
 int main()
@@ -55,12 +57,12 @@ int main()
 	for (size_t i = 0; i < NUM_PHILS; i++)
 	{
 		hPhilosophers[i] = CreateThread(
-			nullptr,
+			0,
 			NULL,
 			ThreadProc,
 			arr + i,
 			NULL,
-			nullptr
+			0
 		);
 	}
 
