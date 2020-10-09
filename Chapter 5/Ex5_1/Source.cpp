@@ -1,9 +1,10 @@
 #include <Windows.h>
 #include <cstdio>
 
-constexpr int NUM_PHILS = 5; // For some reason starts to freak out at 65 philosophers
+constexpr int NUM_PHILS = 64; // For some reason starts to freak out at 65 philosophers
 
-#define EAT() printf("Philosopher %d eating.\n", left_chopstick_index + 1);Sleep(1000)
+//#define EAT() printf("Philosopher %d eating.\n", left_chopstick_index + 1);Sleep(1000)
+#define EAT() printf("Philosopher %d eating.\n", left_chopstick_index + 1)
 
 CRITICAL_SECTION csChopsticks[NUM_PHILS];
 
@@ -12,11 +13,24 @@ DWORD WINAPI ThreadProc(LPVOID lpParameter)
 	const int left_chopstick_index = *static_cast<int*>(lpParameter);
 	const int right_chopstick_index = ((*static_cast<int*>(lpParameter)) + 1) % NUM_PHILS;
 
-	EnterCriticalSection(csChopsticks + left_chopstick_index);
-	EnterCriticalSection(csChopsticks + right_chopstick_index);
-	EAT();
-	LeaveCriticalSection(csChopsticks + left_chopstick_index);
-	LeaveCriticalSection(csChopsticks + right_chopstick_index);
+	BOOL success;
+
+	do
+	{
+		EnterCriticalSection(csChopsticks + left_chopstick_index);
+		success = TryEnterCriticalSection(csChopsticks + right_chopstick_index);
+		if (success)
+		{
+			EAT();
+			LeaveCriticalSection(csChopsticks + left_chopstick_index);
+			LeaveCriticalSection(csChopsticks + right_chopstick_index);
+		}
+
+		else
+		{
+			LeaveCriticalSection(csChopsticks + left_chopstick_index);
+		}
+	} while (!success);
 
 	return 1;
 }
