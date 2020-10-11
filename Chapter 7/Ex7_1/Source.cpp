@@ -44,15 +44,11 @@ int main()
 		{
 			done = true;
 		}
-
-		//printf("%c", read_char);
-
-
 	} while (!done);
 
 	printf("%d\n", As);
 
-
+	CloseHandle(hFile);
 
 	return 0;
 }
