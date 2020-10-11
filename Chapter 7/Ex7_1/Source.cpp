@@ -1,6 +1,8 @@
 #include <Windows.h>
 #include <cstdio>
 
+#define BYTES_TO_READ 64
+
 int main()
 {
 	HANDLE hFile = CreateFile(TEXT("gibrish.bin"),
@@ -11,34 +13,42 @@ int main()
 		FILE_ATTRIBUTE_NORMAL,
 		NULL);
 
-	char read_char;
+	char chars[BYTES_TO_READ];
 	DWORD chars_read;
 	int As = 0;
-	BOOL success = false;
+	BOOL done = false;
 
 	do
 	{
 		if (FALSE != ReadFile(hFile,
-			&read_char,
-			1,
+			chars,
+			BYTES_TO_READ,
 			&chars_read,
 			NULL))
 		{
-			if (read_char == 'A')
+			if (BYTES_TO_READ != chars_read)
 			{
-				As++;
+				done = true;
+			}
+
+			for (DWORD i = 0; i < chars_read; i++)
+			{
+				if ('A' == chars[i])
+				{
+					As++;
+				}
 			}
 		}
 
 		else
 		{
-			success = true;
+			done = true;
 		}
 
 		//printf("%c", read_char);
 
 
-	} while (!success);
+	} while (!done);
 
 	printf("%d\n", As);
 
