@@ -3,6 +3,11 @@
 
 constexpr int SIZE_OF_PRIME_ARRAY = 80000;
 
+#define ADD_PRIME(x) WaitForSingleObject(hIndexMutex, INFINITE);\
+help->arr[help->index] = x;\
+help->index++;\
+ReleaseMutex(hIndexMutex);
+
 struct prime_help
 {
 	int arr[SIZE_OF_PRIME_ARRAY];
@@ -52,36 +57,34 @@ int main(int argc, char* argv[])
 
 	int i, j;
 
-	if (starting_index == 1) {
+	if (0 == starting_index)
+	{
+		starting_index = 2;
+	}
+
+	if (1 == starting_index)
+	{
 		//cout << starting_index << " ";
-		WaitForSingleObject(hIndexMutex, INFINITE);
-		help->arr[help->index] = starting_index;
-		help->index++;
-		ReleaseMutex(hIndexMutex);
+
 		starting_index++;
 		if (ending_index >= 2) {
 			//cout << starting_index << " ";
-			WaitForSingleObject(hIndexMutex, INFINITE);
-			help->arr[help->index] = starting_index;
-			help->index++;
-			ReleaseMutex(hIndexMutex);
+			ADD_PRIME(starting_index);
 			starting_index++;
 		}
 	}
 	if (starting_index == 2)
 	{
-		WaitForSingleObject(hIndexMutex, INFINITE);
-		help->arr[help->index] = starting_index;
-		help->index++;
-		ReleaseMutex(hIndexMutex);
+		ADD_PRIME(starting_index)
 	}
-	//cout << starting_index << " ";
-
 
 	if (starting_index % 2 == 0)
+	{
 		starting_index++;
+	}
 
 	for (i = starting_index; i <= ending_index; i = i + 2) {
+
 		bool flag = 1;
 
 		for (j = 2; j * j <= i; ++j) {
@@ -95,10 +98,7 @@ int main(int argc, char* argv[])
 		// and flag = 0 means i is not prime 
 		if (flag == 1)
 		{
-			WaitForSingleObject(hIndexMutex, INFINITE);
-			help->arr[help->index] = i;
-			help->index++;
-			ReleaseMutex(hIndexMutex);
+			ADD_PRIME(i)
 		}
 		//cout << i << " ";
 	}
@@ -109,16 +109,34 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
-	for (int k = 0; k < 80000; k++)
+	if (3 == proc_number)
 	{
-		if (0 != help->arr[k])
+
+
+		for (int k = 0; k < 80000; k++)
 		{
-			printf("%d\n", help->arr[k]);
+			if (0 != help->arr[k])
+			{
+				printf("%d\n", help->arr[k]);
+			}
 		}
 	}
 
-	CloseHandle(hMapFile);
+	if (!hIndexMutex)
+	{
+		printf("Error with index mutex\n");
+		return -1;
+	}
+
 	CloseHandle(hIndexMutex);
+
+	if (!hMapFile)
+	{
+		printf("Error with map file\n");
+		return -1;
+	}
+
+	CloseHandle(hMapFile);
 
 	return 0;
 }

@@ -4,8 +4,8 @@
 constexpr int SIZE_OF_PRIME_ARRAY = 80000;
 constexpr int NUM_PROCESSES = 4;
 
-#define PROCESS_NAME "PrimeProcess\\Debug\\PrimeProcess.exe"
-constexpr int size = 35 + 3; // Length + 1 space + 1 digit + 1 null terminator
+#define PROCESS_NAME "PrimeProcess\\Release\\PrimeProcess.exe"
+constexpr int size = 37 + 3; // Length + 1 space + 1 digit + 1 null terminator
 
 struct prime_help
 {
@@ -34,7 +34,6 @@ int main()
 	PROCESS_INFORMATION pi[NUM_PROCESSES];
 	for (int i = 0; i < NUM_PROCESSES; i++) {
 		sprintf_s(param, size, "%s %d", PROCESS_NAME, i);
-		//sprintf_s(param, size, "%s", PROCESS_NAME);
 		ZeroMemory(&si, sizeof(si));
 		si.cb = sizeof(si);
 		ZeroMemory(&pi[i], sizeof(pi[i]));
@@ -67,16 +66,21 @@ int main()
 		CloseHandle(pi[i].hThread);
 	}
 
-	if (hIndexMutex)
+	if (!hIndexMutex)
 	{
-		CloseHandle(hIndexMutex);
+		printf("Error with index mutex\n");
+		return -1;
 	}
 
-	if (hMapFile)
+	CloseHandle(hIndexMutex);
+
+	if (!hMapFile)
 	{
-		CloseHandle(hMapFile);
+		printf("Error with map file\n");
+		return -1;
 	}
 
+	CloseHandle(hMapFile);
 
 	return 0;
 }
