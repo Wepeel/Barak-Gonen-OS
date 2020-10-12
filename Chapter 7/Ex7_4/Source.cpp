@@ -3,6 +3,7 @@
 
 constexpr int SIZE_OF_PRIME_ARRAY = 80000;
 constexpr int NUM_PROCESSES = 4;
+constexpr int range_size = 10000;
 
 #define PROCESS_NAME "PrimeProcess\\Release\\PrimeProcess.exe"
 constexpr int size = 37 + 3; // Length + 1 space + 1 digit + 1 null terminator
@@ -10,7 +11,8 @@ constexpr int size = 37 + 3; // Length + 1 space + 1 digit + 1 null terminator
 struct prime_help
 {
 	int arr[SIZE_OF_PRIME_ARRAY] = { 0 };
-	int index{};
+	int starting_range{ 0 };
+	int index{ 0 };
 };
 
 int main()

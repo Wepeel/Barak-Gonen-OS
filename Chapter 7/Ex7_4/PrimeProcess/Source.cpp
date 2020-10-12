@@ -10,8 +10,9 @@ ReleaseMutex(hIndexMutex);
 
 struct prime_help
 {
-	int arr[SIZE_OF_PRIME_ARRAY];
-	int index;
+	int arr[SIZE_OF_PRIME_ARRAY] = { 0 };
+	int starting_range{ 0 };
+	int index{ 0 };
 };
 
 int main(int argc, char* argv[])
