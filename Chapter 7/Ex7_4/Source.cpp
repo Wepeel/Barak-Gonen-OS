@@ -9,25 +9,24 @@ constexpr int size = 35 + 3; // Length + 1 space + 1 digit + 1 null terminator
 
 struct prime_help
 {
-	int arr[SIZE_OF_PRIME_ARRAY];
-	int index;
+	int arr[SIZE_OF_PRIME_ARRAY] = { 0 };
+	int index{};
 };
 
 int main()
 {
-	prime_help primes{};
 
 	HANDLE hIndexMutex = CreateMutex(nullptr,
 		FALSE,
 		TEXT("IndexMutex"));
 
-	HANDLE hMapFile = CreateFileMapping(
+	HANDLE hMapFile = CreateFileMappingA(
 		INVALID_HANDLE_VALUE,
 		nullptr,
 		PAGE_READWRITE,
 		0,
 		sizeof(prime_help),
-		TEXT("Primes")
+		"Primes"
 	);
 
 	char param[size];
@@ -53,12 +52,30 @@ int main()
 
 		if (!success)
 		{
-			printf("Failed %d\n", GetLastError());
+			printf("Failed %lu\n", GetLastError());
 		}
 	}
 
-	CloseHandle(hIndexMutex);
-	CloseHandle(hMapFile);
+	for (int i = 0; i < NUM_PROCESSES; i++)
+	{
+		WaitForSingleObject(pi[i].hProcess, INFINITE);
+	}
+
+	for (int i = 0; i < NUM_PROCESSES; i++)
+	{
+		CloseHandle(pi[i].hProcess);
+		CloseHandle(pi[i].hThread);
+	}
+
+	if (hIndexMutex)
+	{
+		CloseHandle(hIndexMutex);
+	}
+
+	if (hMapFile)
+	{
+		CloseHandle(hMapFile);
+	}
 
 
 	return 0;
