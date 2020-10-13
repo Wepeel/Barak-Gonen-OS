@@ -2,6 +2,8 @@
 #include <cstdio>
 #include <string>
 
+constexpr int notepad_pid = 46116;
+
 constexpr const char* NOTEPAD_PATH = R"(C:\Windows\System32\notepad.exe)";
 constexpr const char* DLL_PATH = "DLL.dll";
 
@@ -10,7 +12,6 @@ constexpr int notepad_path_length = std::char_traits<char>::length(NOTEPAD_PATH)
 
 int main()
 {
-	DWORD err;
 	char path[256];
 	char* file_name[64];
 
@@ -21,7 +22,7 @@ int main()
 	// Get LoadLibrary function address –
 	// the address doesn't change at remote process
 
-	HMODULE hPath = GetModuleHandleA(path);
+	HMODULE hPath = GetModuleHandleA("kernel32.dll");
 
 	if (!hPath)
 	{
@@ -40,18 +41,25 @@ int main()
 	}
 
 	// Open remote process
-	HANDLE proc = OpenProcess(PROCESS_ALL_ACCESS, FALSE, 2);
+	HANDLE proc = OpenProcess(PROCESS_ALL_ACCESS, FALSE, notepad_pid);
+	if (NULL == proc)
+	{
+		printf("Error in opening process - %lu\n", GetLastError());
+		return -1;
+	}
 	// Get a pointer to memory location in remote process,
 	// big enough to store DLL path
-	PVOID memAddr = (PVOID)VirtualAllocEx(proc,
-		addr_load_library,
+	PVOID memAddr = static_cast<PVOID>(VirtualAllocEx(proc,
+		NULL,
 		pathLen,
 		MEM_COMMIT | MEM_RESERVE,
 		PAGE_READWRITE
-	);
-	if (NULL == memAddr) {
-		err = GetLastError();
-		return 0;
+	));
+
+	if (NULL == memAddr)
+	{
+		printf("Error in allocation virtual memory - %lu\n", GetLastError());
+		return -1;
 	}
 	// Write DLL name to remote process memory
 	BOOL check = WriteProcessMemory(proc,
@@ -62,8 +70,8 @@ int main()
 
 	if (0 == check)
 	{
-		err = GetLastError();
-		return 0;
+		printf("Error in writing process memory - %lu\n", GetLastError());
+		return -1;
 	}
 
 	// Open remote thread, while executing LoadLibrary
@@ -72,13 +80,13 @@ int main()
 		NULL,
 		0,
 		static_cast<LPTHREAD_START_ROUTINE>(addr_load_library),
-		NULL,
+		memAddr,
 		0,
 		NULL
 	);
 	if (NULL == hRemote) {
 
-		err = GetLastError();
+		printf("Error in creating remote thread - %lu\n", GetLastError());
 		return -1;
 	}
 	WaitForSingleObject(hRemote, INFINITE);
@@ -87,6 +95,7 @@ int main()
 	if (!check)
 	{
 		printf("Error in closing handle - %lu\n", GetLastError());
+		return -1;
 	}
 
 	return 0;
