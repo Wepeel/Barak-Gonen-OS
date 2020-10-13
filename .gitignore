@@ -4,6 +4,8 @@
 
 *.vcxproj*
 
+*.mp4
+
 /Programs From Book/
 
 Debug/
