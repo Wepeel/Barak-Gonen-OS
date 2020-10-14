@@ -1,1 +1,1 @@
-call ..\..\premake\PREMAKE.exe vs2019
+start ..\..\..\premake\premake5 vs2019
