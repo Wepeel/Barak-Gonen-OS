@@ -2,22 +2,22 @@
 #include <cstdio>
 #include <string>
 
-constexpr int notepad_pid = 46116;
+constexpr int notepad_pid = 9692;
 
 constexpr const char* NOTEPAD_PATH = R"(C:\Windows\System32\notepad.exe)";
-constexpr const char* DLL_PATH = "DLL.dll";
+constexpr const char* DLL_PATH = "..\\DLL\\x64\\Debug\\DLL.dll";
 
 constexpr int dll_path_length = std::char_traits<char>::length(DLL_PATH);
 constexpr int notepad_path_length = std::char_traits<char>::length(NOTEPAD_PATH);
 
 int main()
 {
-	char path[256];
-	char* file_name[64];
+	char path[256]{ 0 };
 
 	// Get full path of DLL to inject
 
-	const DWORD pathLen = GetFullPathNameA(DLL_PATH, 256, path, file_name);
+	GetFullPathNameA(DLL_PATH, 255, path, NULL);
+	const DWORD pathLen = strlen(path);
 
 	// Get LoadLibrary function address –
 	// the address doesn't change at remote process
@@ -41,28 +41,28 @@ int main()
 	}
 
 	// Open remote process
-	HANDLE proc = OpenProcess(PROCESS_ALL_ACCESS, FALSE, notepad_pid);
-	if (NULL == proc)
+	HANDLE hProc = OpenProcess(PROCESS_ALL_ACCESS, FALSE, notepad_pid);
+	if (NULL == hProc)
 	{
 		printf("Error in opening process - %lu\n", GetLastError());
 		return -1;
 	}
 	// Get a pointer to memory location in remote process,
 	// big enough to store DLL path
-	PVOID memAddr = static_cast<PVOID>(VirtualAllocEx(proc,
+	PVOID memAddr = static_cast<PVOID>(VirtualAllocEx(hProc,
 		NULL,
 		pathLen,
-		MEM_COMMIT | MEM_RESERVE,
+		MEM_RESERVE | MEM_COMMIT,
 		PAGE_READWRITE
 	));
 
-	if (NULL == memAddr)
+	if (nullptr == memAddr)
 	{
 		printf("Error in allocation virtual memory - %lu\n", GetLastError());
 		return -1;
 	}
 	// Write DLL name to remote process memory
-	BOOL check = WriteProcessMemory(proc,
+	BOOL check = WriteProcessMemory(hProc,
 		memAddr,
 		path,
 		pathLen,
@@ -76,7 +76,7 @@ int main()
 
 	// Open remote thread, while executing LoadLibrary
 	// with parameter DLL name, will trigger DLLMain
-	HANDLE hRemote = CreateRemoteThread(proc,
+	HANDLE hRemote = CreateRemoteThread(hProc,
 		NULL,
 		0,
 		static_cast<LPTHREAD_START_ROUTINE>(addr_load_library),
